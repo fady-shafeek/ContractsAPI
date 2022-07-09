@@ -17,8 +17,8 @@ namespace ContractsAPI.Models
         public int ServiceID { get; set; }
 
 
-        public virtual Customer Customer { get; set; }
-        public virtual Service Service { get; set; }
+        public virtual Customer? Customer { get; set; }
+        public virtual Service? Service { get; set; }
 
 
     }

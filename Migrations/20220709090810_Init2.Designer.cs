@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ContractsAPI.Migrations
 {
     [DbContext(typeof(ContractContext))]
-    [Migration("20220708234508_Init")]
-    partial class Init
+    [Migration("20220709090810_Init2")]
+    partial class Init2
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -90,13 +90,13 @@ namespace ContractsAPI.Migrations
             modelBuilder.Entity("ContractsAPI.Models.Contract", b =>
                 {
                     b.HasOne("ContractsAPI.Models.Customer", "Customer")
-                        .WithMany("Contract")
+                        .WithMany("Contracts")
                         .HasForeignKey("CustomerID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("ContractsAPI.Models.Service", "Service")
-                        .WithMany()
+                        .WithMany("Contracts")
                         .HasForeignKey("ServiceID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -108,7 +108,12 @@ namespace ContractsAPI.Migrations
 
             modelBuilder.Entity("ContractsAPI.Models.Customer", b =>
                 {
-                    b.Navigation("Contract");
+                    b.Navigation("Contracts");
+                });
+
+            modelBuilder.Entity("ContractsAPI.Models.Service", b =>
+                {
+                    b.Navigation("Contracts");
                 });
 #pragma warning restore 612, 618
         }

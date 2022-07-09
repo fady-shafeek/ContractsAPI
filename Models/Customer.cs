@@ -7,6 +7,7 @@ namespace ContractsAPI.Models
         [Key]
         public int ID { get; set; }
         public string Name { get; set; }
-        public ICollection<Contract> Contract { get; set; }
+        public virtual ICollection<Contract>? Contracts { get; set; }
+        
     }
 }
