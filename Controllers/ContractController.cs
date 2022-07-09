@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using ContractsAPI.Models;
 using ContractsAPI.Models.NewFolder;
 using System.Collections;
-
+using ContractsAPI.Models.DTO;
 
 namespace ContractsAPI.Controllers
 {
@@ -22,10 +22,6 @@ namespace ContractsAPI.Controllers
         {
             _context = context;
         }
-
-
-
-
 
         //Get customers from database with server-side pagination
         [HttpGet("/Contracts")]
@@ -109,53 +105,36 @@ namespace ContractsAPI.Controllers
 
         //	Get customers count per month per year
         [HttpGet("/CustomerPerMonthPerYear")]
-        public async Task<ActionResult<int>> CustomerPerMonthPerYear(int m, int y)
+        public async Task<ActionResult<int>> CustomerPerMonthPerYear(int month, int year)
         {
-            int customersCount = _context.Contracts.Where(x => x.ContractDate.Month == m && x.ContractDate.Year == y).Count();
+            int customersCount = _context.Contracts.Where(x => x.ContractDate.Month == month && x.ContractDate.Year == year).Count();
             return customersCount;
         }
 
+        //Pie-Chart
+        [HttpGet("/ChartPerMonthPerYear")]
+        public async Task<ActionResult<IEnumerable<ContractsPieChartDTO>>> GetPieChartData(int year)
+        {
+            IDictionary<string, int> Months = new Dictionary<string, int>()
+            {{"Jan",0},{"Feb",0},{"Mar",0},{"Apr",0},{"May",0},{"Jun",0},{"Jul",0},{"Aug",0},{"Sep",0},{"Oct",0},{"Nov",0},{"Dec",0}};
+            List<ContractsPieChartDTO> customerContracts = new List<ContractsPieChartDTO>();
+            List<Contract> contracts = await _context.Contracts.Where(c => c.ContractDate.Year == year).ToListAsync();
+            foreach (Contract contract in contracts)
+            {
+                string ff = contract.ContractDate.ToString("MMM");
+                Months[contract.ContractDate.ToString("MMM")]++;
+            }
 
+            foreach (var item in Months)
+            {
+                var pieChart = new ContractsPieChartDTO();
+                pieChart.MonthName = item.Key;
+                pieChart.Count = item.Value;
+                customerContracts.Add(pieChart);
+            }
 
+            return customerContracts;
+        }
 
-
-
-
-
-
-        //// GET: api/Contract
-        //[HttpGet]
-        //public async Task<ActionResult<IEnumerable<Contract>>> GetContracts()
-        //{
-        //  if (_context.Contracts == null)
-        //  {
-        //      return NotFound();
-        //  }
-        //    return await _context.Contracts.ToListAsync();
-        //}
-
-        // GET: api/Contract/5
-        //    [HttpGet("{id}")]
-        //public async Task<ActionResult<Contract>> GetContract(int id)
-        //{
-        //  if (_context.Contracts == null)
-        //  {
-        //      return NotFound();
-        //  }
-        //    var contract = await _context.Contracts.FindAsync(id);
-
-        //    if (contract == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    return contract;
-        //}
-
-
-        //private bool ContractExists(int id)
-        //{
-        //   return (_context.Contracts?.Any(e => e.ID == id)).GetValueOrDefault();
-        //}
     }
 }
