@@ -93,12 +93,23 @@ namespace ContractsAPI.Controllers
 
 
 
-        //Get customers counts according the service type 
+        //Get customers counts per service type
         [HttpGet("/CustomerPerService")]
-        public async Task<ActionResult<int>> CustomerPerService(int ServiceID)
+        public async Task<ActionResult<IEnumerable<ServiceUserCountDTO>>> CustomerPerService()
         {
-            int customersCount = _context.Contracts.Where(x => x.ServiceID == ServiceID).Count();
-            return customersCount;
+            List<ServiceUserCountDTO> Srv = new List<ServiceUserCountDTO>();
+            var services = _context.Services.ToList();
+            foreach(Service service in services)
+            {
+                
+                var customerCount = await _context.Contracts.Where(c => c.ServiceID == service.ID).CountAsync(); 
+                var rec = new ServiceUserCountDTO();
+                rec.Service = service.Type;
+                rec.Count = customerCount;
+                Srv.Add(rec);
+            }
+
+            return Srv;
         }
 
 
@@ -113,7 +124,7 @@ namespace ContractsAPI.Controllers
 
         //Pie-Chart
         [HttpGet("/ChartPerMonthPerYear")]
-        public async Task<ActionResult<IEnumerable<ContractsPieChartDTO>>> GetPieChartData(int year)
+        public async Task<ActionResult<IEnumerable<ContractsPieChartDTO>>> GetPieChartData(int year =2020)
         {
             IDictionary<string, int> Months = new Dictionary<string, int>()
             {{"Jan",0},{"Feb",0},{"Mar",0},{"Apr",0},{"May",0},{"Jun",0},{"Jul",0},{"Aug",0},{"Sep",0},{"Oct",0},{"Nov",0},{"Dec",0}};
