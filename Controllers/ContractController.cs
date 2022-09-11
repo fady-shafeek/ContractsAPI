@@ -27,19 +27,25 @@ namespace ContractsAPI.Controllers
         [HttpGet("/Contracts")]
         public async Task<ActionResult<IEnumerable<CustomerContractDTO>>> GetContract(int pagesize = 20, int pagenumber = 1)
         {
-
             List<CustomerContractDTO> customerContracts = new List<CustomerContractDTO>();
-
-            List<Contract> contracts = await _context.Contracts.ToListAsync();
-            foreach (Contract contract in contracts)
+            var contracts = from cntrct in _context.Contracts
+                       from client in _context.Customers
+                       from srvc in _context.Services
+                       where cntrct.CustomerID == client.ID && cntrct.ServiceID == srvc.ID
+                       select new
+                       {
+                           customerName = client.Name,
+                           contractDate = cntrct.ContractDate,
+                           contractExpiryDate = cntrct.ContractExpiryDate,
+                           serviceType = srvc.Type
+                       };
+            foreach(var contract in contracts)
             {
                 var customerContract = new CustomerContractDTO();
-                var customer = await _context.Customers.Where(c => c.ID == contract.CustomerID).SingleOrDefaultAsync();
-                var service = await _context.Services.Where(s => s.ID == contract.ServiceID).SingleOrDefaultAsync();
-                customerContract.ContractDate = contract.ContractDate;
-                customerContract.ContractExpiryDate = contract.ContractExpiryDate;
-                customerContract.CustomerName = customer.Name;
-                customerContract.ServiceType = service.Type;
+                customerContract.ContractDate = contract.contractDate;
+                customerContract.ContractExpiryDate = contract.contractExpiryDate;
+                customerContract.CustomerName = contract.customerName;
+                customerContract.ServiceType = contract.serviceType;
                 customerContracts.Add(customerContract);
             }
             customerContracts = customerContracts.Skip(pagesize * (pagenumber - 1)).Take(pagesize).ToList();
