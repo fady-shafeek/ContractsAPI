@@ -22,37 +22,42 @@ namespace ContractsAPI.Controllers
         {
             _context = context;
         }
-
         //Get customers from database with server-side pagination
         [HttpGet("/Contracts")]
         public async Task<ActionResult<IEnumerable<CustomerContractDTO>>> GetContract(int pagesize = 20, int pagenumber = 1)
         {
             List<CustomerContractDTO> customerContracts = new List<CustomerContractDTO>();
-            var contracts = from cntrct in _context.Contracts
-                       from client in _context.Customers
-                       from srvc in _context.Services
-                       where cntrct.CustomerID == client.ID && cntrct.ServiceID == srvc.ID
-                       select new
-                       {
-                           customerName = client.Name,
-                           contractDate = cntrct.ContractDate,
-                           contractExpiryDate = cntrct.ContractExpiryDate,
-                           serviceType = srvc.Type
-                       };
-            foreach(var contract in contracts)
+            var contracts = await _context.Contracts.Include(a => a.Service).Include(c => c.Customer).Skip(pagesize * (pagenumber - 1)).Take(pagesize).ToListAsync();
+            foreach (var contract in contracts)
             {
                 var customerContract = new CustomerContractDTO();
-                customerContract.ContractDate = contract.contractDate;
-                customerContract.ContractExpiryDate = contract.contractExpiryDate;
-                customerContract.CustomerName = contract.customerName;
-                customerContract.ServiceType = contract.serviceType;
+                customerContract.ContractDate = contract.ContractDate;
+                customerContract.ContractExpiryDate = contract.ContractExpiryDate;
+                customerContract.CustomerName = contract.Customer.Name;
+                customerContract.ServiceType = contract.Service.Type;
                 customerContracts.Add(customerContract);
             }
-            customerContracts = customerContracts.Skip(pagesize * (pagenumber - 1)).Take(pagesize).ToList();
-
             return customerContracts;
-
         }
+
+
+
+        ////Get customers from database with server-side pagination
+        //[HttpGet("/Contracts")]
+        //public IQueryable GetContract(int pagesize = 20, int pagenumber = 1)
+        //{
+        //    var contracts = from cntrct in _context.Contracts
+        //                    select new
+        //                    {
+        //                        customerName = cntrct.Customer.Name,
+        //                        contractDate = cntrct.ContractDate,
+        //                        contractExpiryDate = cntrct.ContractExpiryDate,
+        //                        serviceType = cntrct.Service.Type
+        //                    };
+        //    return contracts;
+        //}
+
+
 
         //Get Customers where their contract is expired
         [HttpGet("/ExpiredContracts")]
