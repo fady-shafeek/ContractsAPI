@@ -26,20 +26,15 @@ namespace ContractsAPI.Controllers
         [HttpGet("/Contracts")]
         public async Task<ActionResult<IEnumerable<CustomerContractDTO>>> GetContract(int pagesize = 20, int pagenumber = 1)
         {
-            List<CustomerContractDTO> customerContracts = new List<CustomerContractDTO>();
-            var contracts = await _context.Contracts.Include(a => a.Service).Include(c => c.Customer).Skip(pagesize * (pagenumber - 1)).Take(pagesize).ToListAsync();
-            foreach (var contract in contracts)
+            var contracts = await _context.Contracts.Include(a => a.Service).Include(c => c.Customer).Select(s => new CustomerContractDTO
             {
-                var customerContract = new CustomerContractDTO();
-                customerContract.ContractDate = contract.ContractDate;
-                customerContract.ContractExpiryDate = contract.ContractExpiryDate;
-                customerContract.CustomerName = contract.Customer.Name;
-                customerContract.ServiceType = contract.Service.Type;
-                customerContracts.Add(customerContract);
-            }
-            return customerContracts;
+                ContractDate = s.ContractDate,
+                ContractExpiryDate = s.ContractExpiryDate,
+                CustomerName = s.Customer.Name,
+                ServiceType = s.Service.Type
+            }).Skip(pagesize * (pagenumber - 1)).Take(pagesize).ToListAsync();
+            return contracts;
         }
-
 
 
         ////Get customers from database with server-side pagination
@@ -110,10 +105,10 @@ namespace ContractsAPI.Controllers
         {
             List<ServiceUserCountDTO> Srv = new List<ServiceUserCountDTO>();
             var services = _context.Services.ToList();
-            foreach(Service service in services)
+            foreach (Service service in services)
             {
-                
-                var customerCount = await _context.Contracts.Where(c => c.ServiceID == service.ID).CountAsync(); 
+
+                var customerCount = await _context.Contracts.Where(c => c.ServiceID == service.ID).CountAsync();
                 var rec = new ServiceUserCountDTO();
                 rec.Service = service.Type;
                 rec.Count = customerCount;
@@ -135,7 +130,7 @@ namespace ContractsAPI.Controllers
 
         //Pie-Chart
         [HttpGet("/ChartPerMonthPerYear")]
-        public async Task<ActionResult<IEnumerable<ContractsPieChartDTO>>> GetPieChartData(int year =2020)
+        public async Task<ActionResult<IEnumerable<ContractsPieChartDTO>>> GetPieChartData(int year = 2020)
         {
             IDictionary<string, int> Months = new Dictionary<string, int>()
             {{"Jan",0},{"Feb",0},{"Mar",0},{"Apr",0},{"May",0},{"Jun",0},{"Jul",0},{"Aug",0},{"Sep",0},{"Oct",0},{"Nov",0},{"Dec",0}};
